@@ -1,0 +1,136 @@
+enum TaskStatus {
+  OPEN
+  RESOLVED
+  WONT_FIX
+  INVALID
+  SPITE
+}
+
+enum TaskPriority {
+  UNBREAK_NOW
+  NEEDS_TRIAGE
+  HIGH
+  NORMAL
+  LOW
+  WISHLIST
+}
+
+enum TaskVisibility {
+  ALL_USERS
+  CUSTOM
+}
+
+enum TaskActivityType {
+  CREATED
+  UPDATED
+  ASSIGNED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  TAG_ADDED
+  TAG_REMOVED
+  SUBSCRIBER_ADDED
+  SUBSCRIBER_REMOVED
+  COMMENT_ADDED
+}
+
+model User {
+  id            Int              @id
+  username      String           @unique
+  email         String           @unique
+  displayName   String
+  avatarUrl     String?
+  createdAt     DateTime
+  updatedAt     DateTime
+
+  createdTasks  Task[]           @relation("TaskAuthor")
+  assignedTasks Task[]           @relation("TaskAssignee")
+  comments      TaskComment[]
+  activities    TaskActivity[]
+  subscriptions TaskSubscriber[]
+}
+
+model Task {
+  id           Int              @id
+  taskNumber   Int              @unique
+  title        String
+  description  String?
+
+  status       TaskStatus       @default(OPEN)
+  priority     TaskPriority     @default(NORMAL)
+  visibility   TaskVisibility   @default(ALL_USERS)
+
+  createdById  Int
+  assignedToId Int?
+  parentTaskId Int?
+
+  createdAt    DateTime
+  updatedAt    DateTime
+
+  createdBy    User             @relation("TaskAuthor", fields:[createdById], references:[id])
+  assignedTo   User?            @relation("TaskAssignee", fields:[assignedToId], references:[id])
+
+  parentTask   Task?            @relation("TaskHierarchy", fields:[parentTaskId], references:[id])
+  subtasks     Task[]           @relation("TaskHierarchy")
+
+  comments     TaskComment[]
+  activities   TaskActivity[]
+  subscribers  TaskSubscriber[]
+  tags         TaskTag[]
+}
+
+model TaskComment {
+  id        Int      @id
+  taskId    Int
+  userId    Int
+  content   String
+  createdAt DateTime
+  updatedAt DateTime
+
+  task      Task     @relation(fields:[taskId], references:[id])
+  user      User     @relation(fields:[userId], references:[id])
+}
+
+model TaskActivity {
+  id        Int              @id
+  taskId    Int
+  userId    Int
+  type      TaskActivityType
+  oldValue  String?
+  newValue  String?
+  comment   String?
+  createdAt DateTime
+
+  task      Task             @relation(fields:[taskId], references:[id])
+  user      User             @relation(fields:[userId], references:[id])
+}
+
+model TaskSubscriber {
+  taskId    Int
+  userId    Int
+  createdAt DateTime
+
+  task      Task     @relation(fields:[taskId], references:[id])
+  user      User     @relation(fields:[userId], references:[id])
+
+  @@id([taskId, userId])
+}
+
+model Tag {
+  id          Int       @id
+  name        String    @unique
+  description String?
+  createdAt   DateTime
+  updatedAt   DateTime
+
+  tasks       TaskTag[]
+}
+
+model TaskTag {
+  taskId Int
+  tagId  Int
+
+  task   Task @relation(fields:[taskId], references:[id])
+  tag    Tag  @relation(fields:[tagId], references:[id])
+
+  @@id([taskId, tagId])
+}
