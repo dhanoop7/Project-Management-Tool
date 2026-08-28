@@ -1042,6 +1042,10 @@
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
                   "nativeType": "int4",
                   "nullable": false
                 },
@@ -1112,6 +1116,10 @@
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
                   "nativeType": "int4",
                   "nullable": false
                 },
@@ -1291,6 +1299,10 @@
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
                   "nativeType": "int4",
                   "nullable": false
                 },
@@ -1399,6 +1411,10 @@
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
                   "nativeType": "int4",
                   "nullable": false
                 },
@@ -1652,6 +1668,10 @@
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
                   "nativeType": "int4",
                   "nullable": false
                 },
@@ -1737,7 +1757,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "8cd90aa0acf2a156e0b5ea0cb4c8be58771e5adc473e9ea3540d3316a4320f06"
+    "storageHash": "7983fd1f1c8a97bc07b7cf076949ed1b051e13f41b8dcc547c638fdf79d51cac"
   },
   "capabilities": {
     "postgres": {

@@ -34,7 +34,7 @@ enum TaskActivityType {
 }
 
 model User {
-  id            Int              @id
+  id            Int              @id @default(autoincrement())
   username      String           @unique
   email         String           @unique
   displayName   String
@@ -50,7 +50,7 @@ model User {
 }
 
 model Task {
-  id           Int              @id
+  id           Int              @id @default(autoincrement())
   taskNumber   Int              @unique
   title        String
   description  String?
@@ -79,7 +79,7 @@ model Task {
 }
 
 model TaskComment {
-  id        Int      @id
+  id        Int      @id @default(autoincrement())
   taskId    Int
   userId    Int
   content   String
@@ -91,7 +91,7 @@ model TaskComment {
 }
 
 model TaskActivity {
-  id        Int              @id
+  id        Int              @id @default(autoincrement())
   taskId    Int
   userId    Int
   type      TaskActivityType
@@ -116,7 +116,7 @@ model TaskSubscriber {
 }
 
 model Tag {
-  id          Int       @id
+  id          Int       @id @default(autoincrement())
   name        String    @unique
   description String?
   createdAt   DateTime
