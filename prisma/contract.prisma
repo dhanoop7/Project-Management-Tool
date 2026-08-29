@@ -33,12 +33,19 @@ enum TaskActivityType {
   COMMENT_ADDED
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
 model User {
   id            Int              @id @default(autoincrement())
   username      String           @unique
   email         String           @unique
   displayName   String
   avatarUrl     String?
+  role        UserRole  @default(USER)
+  passwordHash String?
   createdAt     DateTime
   updatedAt     DateTime
 

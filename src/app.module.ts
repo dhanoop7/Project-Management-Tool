@@ -6,9 +6,10 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { SubscribersModule } from './modules/subscribers/subscribers.module';
 import { TagsModule } from './modules/tags/tags.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
-  imports: [TasksModule, CommentsModule, SubscribersModule, TagsModule],
+  imports: [TasksModule, CommentsModule, SubscribersModule, TagsModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

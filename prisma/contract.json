@@ -148,6 +148,19 @@
                 "value": "CUSTOM"
               }
             ]
+          },
+          "UserRole": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "ADMIN",
+                "value": "ADMIN"
+              },
+              {
+                "name": "USER",
+                "value": "USER"
+              }
+            ]
           }
         },
         "models": {
@@ -899,6 +912,26 @@
                   "kind": "scalar"
                 }
               },
+              "passwordHash": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "UserRole",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
               "updatedAt": {
                 "nullable": false,
                 "type": {
@@ -1007,6 +1040,12 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "passwordHash": {
+                  "column": "passwordHash"
+                },
+                "role": {
+                  "column": "role"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -1645,6 +1684,13 @@
               "uniques": []
             },
             "user": {
+              "checks": [
+                {
+                  "expression": "\"role\" IN ('ADMIN', 'USER')",
+                  "name": "user_role_check_5b1978b5",
+                  "prefix": "user_role_check"
+                }
+              ],
               "columns": {
                 "avatarUrl": {
                   "codecId": "pg/text@1",
@@ -1674,6 +1720,26 @@
                   },
                   "nativeType": "int4",
                   "nullable": false
+                },
+                "passwordHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "USER"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "UserRole",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-temporal@1",
@@ -1750,6 +1816,13 @@
                 "ALL_USERS",
                 "CUSTOM"
               ]
+            },
+            "UserRole": {
+              "kind": "valueSet",
+              "values": [
+                "ADMIN",
+                "USER"
+              ]
             }
           }
         },
@@ -1757,7 +1830,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "7983fd1f1c8a97bc07b7cf076949ed1b051e13f41b8dcc547c638fdf79d51cac"
+    "storageHash": "ede5dcf8bbb6b82317a15bfd12ff5205016c7acd21270223e4d0e178e3e39123"
   },
   "capabilities": {
     "postgres": {
