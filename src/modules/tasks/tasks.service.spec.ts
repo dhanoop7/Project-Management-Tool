@@ -14,6 +14,9 @@ describe('TasksService', () => {
             select: jest.fn(),
             create: jest.fn(),
           },
+          TaskActivity: {
+            create: jest.fn(),
+          },
         },
       },
     },
@@ -27,6 +30,7 @@ describe('TasksService', () => {
     prismaService.client.orm.public.Task.create.mockImplementation((task) =>
       Promise.resolve(task),
     );
+    prismaService.client.orm.public.TaskActivity.create.mockResolvedValue({});
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -55,8 +59,7 @@ describe('TasksService', () => {
       service.createTask({
         title: 'Build Maniphest create',
         description: 'Wire POST /tasks',
-        createdById: 1,
-      }),
+      }, 1),
     ).resolves.toMatchObject({
       taskNumber: 42,
       title: 'Build Maniphest create',

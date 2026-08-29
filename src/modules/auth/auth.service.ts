@@ -15,6 +15,10 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
+type AuthUserRow = Awaited<
+  ReturnType<PrismaService['client']['orm']['public']['User']['first']>
+>;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -43,7 +47,7 @@ export class AuthService {
 
     const now = Temporal.Now.instant();
 
-    return this.prisma.client.orm.public.User.create({
+    const user = await this.prisma.client.orm.public.User.create({
       username: registerDto.username,
       email: registerDto.email,
       displayName: registerDto.displayName,
@@ -53,6 +57,8 @@ export class AuthService {
       createdAt: now,
       updatedAt: now,
     });
+
+    return this.toPublicUser(user);
   }
 
   async login(loginDto: LoginDto) {
@@ -82,5 +88,12 @@ export class AuthService {
     return {
       accessToken: await this.jwtService.signAsync(payload),
     };
+  }
+
+  private toPublicUser(user: NonNullable<AuthUserRow>) {
+    const { passwordHash, ...publicUser } = user;
+    void passwordHash;
+
+    return publicUser;
   }
 }

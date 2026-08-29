@@ -1,5 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
@@ -8,11 +19,17 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   createComment(
     @Param('taskId') taskId: string,
     @Body() createCommentDto: CreateCommentDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.commentsService.createComment(Number(taskId), createCommentDto);
+    return this.commentsService.createComment(
+      Number(taskId),
+      createCommentDto,
+      req.user.userId,
+    );
   }
 
   @Get()
@@ -21,6 +38,7 @@ export class CommentsController {
   }
 
   @Delete(':commentId')
+  @UseGuards(JwtAuthGuard)
   deleteComment(
     @Param('taskId') taskId: string,
     @Param('commentId') commentId: string,

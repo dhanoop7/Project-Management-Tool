@@ -11,6 +11,7 @@ export class SubscribersService {
   async addSubscriber(
     taskId: number,
     createSubscriberDto: CreateSubscriberDto,
+    actorUserId: number,
   ) {
     const task = await this.prisma.client.orm.public.Task.where({
       id: taskId,
@@ -31,7 +32,7 @@ export class SubscribersService {
 
     await this.prisma.client.orm.public.TaskActivity.create({
       taskId,
-      userId: createSubscriberDto.userId,
+      userId: actorUserId,
       type: 'SUBSCRIBER_ADDED',
       oldValue: null,
       newValue: String(createSubscriberDto.userId),
@@ -54,7 +55,11 @@ export class SubscribersService {
     return this.prisma.client.orm.public.TaskSubscriber.where({ taskId }).all();
   }
 
-  async removeSubscriber(taskId: number, userId: number) {
+  async removeSubscriber(
+    taskId: number,
+    userId: number,
+    actorUserId: number,
+  ) {
     const subscriber = await this.prisma.client.orm.public.TaskSubscriber.where(
       {
         taskId,
@@ -77,7 +82,7 @@ export class SubscribersService {
 
     await this.prisma.client.orm.public.TaskActivity.create({
       taskId,
-      userId,
+      userId: actorUserId,
       type: 'SUBSCRIBER_REMOVED',
       oldValue: String(userId),
       newValue: null,

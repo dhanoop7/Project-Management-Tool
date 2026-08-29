@@ -1,5 +1,7 @@
 import { jest } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 
@@ -8,6 +10,10 @@ describe('TasksController', () => {
   const tasksService = {
     getTasks: jest.fn(),
     createTask: jest.fn(),
+    updateTask: jest.fn(),
+    deleteTask: jest.fn(),
+    getTask: jest.fn(),
+    getActivities: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -22,7 +28,10 @@ describe('TasksController', () => {
           useValue: tasksService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
     controller = module.get<TasksController>(TasksController);
   });
@@ -39,10 +48,16 @@ describe('TasksController', () => {
   it('should create a task through the service', async () => {
     const dto = {
       title: 'Build Maniphest create',
-      createdById: 1,
     };
+    const req = {
+      user: {
+        userId: 3,
+        username: 'newuser',
+        role: 'USER',
+      },
+    } as AuthenticatedRequest;
 
-    await expect(controller.createTask(dto)).resolves.toEqual({ id: 1 });
-    expect(tasksService.createTask).toHaveBeenCalledWith(dto);
+    await expect(controller.createTask(dto, req)).resolves.toEqual({ id: 1 });
+    expect(tasksService.createTask).toHaveBeenCalledWith(dto, 3);
   });
 });

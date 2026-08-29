@@ -37,7 +37,11 @@ export class TagsService {
     return this.prisma.client.orm.public.Tag.all();
   }
 
-  async addTagToTask(taskId: number, addTagDto: AddTagToTaskDto) {
+  async addTagToTask(
+    taskId: number,
+    addTagDto: AddTagToTaskDto,
+    actorUserId: number,
+  ) {
     const task = await this.prisma.client.orm.public.Task.where({
       id: taskId,
     }).first();
@@ -63,7 +67,7 @@ export class TagsService {
 
     await this.prisma.client.orm.public.TaskActivity.create({
       taskId,
-      userId: task.createdById,
+      userId: actorUserId,
       type: 'TAG_ADDED',
       oldValue: null,
       newValue: String(addTagDto.tagId),
@@ -86,7 +90,11 @@ export class TagsService {
     return this.prisma.client.orm.public.TaskTag.where({ taskId }).all();
   }
 
-  async removeTagFromTask(taskId: number, tagId: number) {
+  async removeTagFromTask(
+    taskId: number,
+    tagId: number,
+    actorUserId: number,
+  ) {
     const task = await this.prisma.client.orm.public.Task.where({
       id: taskId,
     }).first();
@@ -115,7 +123,7 @@ export class TagsService {
 
     await this.prisma.client.orm.public.TaskActivity.create({
       taskId,
-      userId: task.createdById,
+      userId: actorUserId,
       type: 'TAG_REMOVED',
       oldValue: String(tagId),
       newValue: null,
