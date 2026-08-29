@@ -40,4 +40,9 @@ export class TasksController {
   deleteTask(@Param('id') id: string) {
     return this.tasksService.deleteTask(Number(id));
   }
+
+  @Get(':id/activities')
+  getActivities(@Param('id') id: string) {
+    return this.tasksService.getActivities(Number(id));
+  }
 }

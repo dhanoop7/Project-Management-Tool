@@ -25,15 +25,17 @@ export class TasksService {
   async createTask(createTaskDto: CreateTaskDto) {
     const existingTasks =
       await this.prisma.client.orm.public.Task.select('taskNumber').all();
+
     const taskNumber =
       existingTasks.reduce(
         (highestTaskNumber, task) =>
           Math.max(highestTaskNumber, task.taskNumber),
         0,
       ) + 1;
+
     const now = Temporal.Now.instant();
 
-    return this.prisma.client.orm.public.Task.create({
+    const task = await this.prisma.client.orm.public.Task.create({
       taskNumber,
       title: createTaskDto.title,
       description: createTaskDto.description ?? null,
@@ -46,6 +48,18 @@ export class TasksService {
       createdAt: now,
       updatedAt: now,
     });
+
+    await this.prisma.client.orm.public.TaskActivity.create({
+      taskId: task.id,
+      userId: createTaskDto.createdById,
+      type: 'CREATED',
+      oldValue: null,
+      newValue: null,
+      comment: null,
+      createdAt: now,
+    });
+
+    return task;
   }
 
   async updateTask(id: number, updateTaskDto: UpdateTaskDto) {
@@ -55,10 +69,72 @@ export class TasksService {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
 
-    return this.prisma.client.orm.public.Task.where({ id }).update({
-      ...updateTaskDto,
-      updatedAt: Temporal.Now.instant(),
+    const now = Temporal.Now.instant();
+
+    const {
+      userId,
+      title,
+      description,
+      status,
+      priority,
+      visibility,
+      assignedToId,
+      parentTaskId,
+    } = updateTaskDto;
+
+    const updatedTask = await this.prisma.client.orm.public.Task.where({
+      id,
+    }).update({
+      ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(status !== undefined && { status }),
+      ...(priority !== undefined && { priority }),
+      ...(visibility !== undefined && { visibility }),
+      ...(assignedToId !== undefined && { assignedToId }),
+      ...(parentTaskId !== undefined && { parentTaskId }),
+      updatedAt: now,
     });
+
+    if (userId !== undefined) {
+      if (priority !== undefined && priority !== task.priority) {
+        await this.prisma.client.orm.public.TaskActivity.create({
+          taskId: id,
+          userId,
+          type: 'PRIORITY_CHANGED',
+          oldValue: task.priority,
+          newValue: priority,
+          comment: null,
+          createdAt: now,
+        });
+      }
+
+      if (status !== undefined && status !== task.status) {
+        await this.prisma.client.orm.public.TaskActivity.create({
+          taskId: id,
+          userId,
+          type: 'STATUS_CHANGED',
+          oldValue: task.status,
+          newValue: status,
+          comment: null,
+          createdAt: now,
+        });
+      }
+
+      if (assignedToId !== undefined && assignedToId !== task.assignedToId) {
+        await this.prisma.client.orm.public.TaskActivity.create({
+          taskId: id,
+          userId,
+          type: 'ASSIGNED',
+          oldValue:
+            task.assignedToId !== null ? String(task.assignedToId) : null,
+          newValue: String(assignedToId),
+          comment: null,
+          createdAt: now,
+        });
+      }
+    }
+
+    return updatedTask;
   }
 
   async deleteTask(id: number) {
@@ -73,5 +149,17 @@ export class TasksService {
     return {
       message: `Task with ID ${id} deleted successfully`,
     };
+  }
+
+  async getActivities(taskId: number) {
+    const task = await this.prisma.client.orm.public.Task.where({
+      id: taskId,
+    }).first();
+
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
+    }
+
+    return this.prisma.client.orm.public.TaskActivity.where({ taskId }).all();
   }
 }
