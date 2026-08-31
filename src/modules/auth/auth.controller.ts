@@ -7,7 +7,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from './types/authenticated-user';
 
 import { RolesGuard } from './guards/roles.guard';
-import { Roles } from './decorators/roles.decorator';
+// import { Roles } from './decorators/roles.decorator';
 
 @Controller('auth')
 export class AuthController {

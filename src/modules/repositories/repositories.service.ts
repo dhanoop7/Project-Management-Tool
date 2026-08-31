@@ -22,15 +22,12 @@ export class RepositoriesService {
   }
 
   async getRepository(slug: string) {
-    const repository =
-      await this.prisma.client.orm.public.Repository.where({
-        slug,
-      }).first();
+    const repository = await this.prisma.client.orm.public.Repository.where({
+      slug,
+    }).first();
 
     if (!repository) {
-      throw new NotFoundException(
-        `Repository "${slug}" not found`,
-      );
+      throw new NotFoundException(`Repository "${slug}" not found`);
     }
 
     return repository;
@@ -70,8 +67,7 @@ export class RepositoriesService {
       slug: createRepositoryDto.slug,
       description: createRepositoryDto.description ?? null,
       localPath,
-      visibility:
-        createRepositoryDto.visibility ?? 'PRIVATE',
+      visibility: createRepositoryDto.visibility ?? 'PRIVATE',
       createdById: userId,
       createdAt: now,
       updatedAt: now,
@@ -109,17 +105,10 @@ export class RepositoriesService {
   async getCommits(slug: string, ref?: string) {
     const repository = await this.getRepository(slug);
 
-    return this.gitService.listCommits(
-      repository.localPath,
-      ref ?? 'HEAD',
-    );
+    return this.gitService.listCommits(repository.localPath, ref ?? 'HEAD');
   }
 
-  async getTree(
-    slug: string,
-    ref?: string,
-    repositoryFilePath?: string,
-  ) {
+  async getTree(slug: string, ref?: string, repositoryFilePath?: string) {
     const repository = await this.getRepository(slug);
 
     return this.gitService.listTree(
@@ -141,5 +130,17 @@ export class RepositoriesService {
       ref ?? 'HEAD',
       repositoryFilePath,
     );
+  }
+
+  async getCommit(slug: string, hash: string) {
+    const repository = await this.getRepository(slug);
+
+    return this.gitService.getCommit(repository.localPath, hash);
+  }
+
+  async getCommitDiff(slug: string, hash: string) {
+    const repository = await this.getRepository(slug);
+
+    return this.gitService.getCommitDiff(repository.localPath, hash);
   }
 }

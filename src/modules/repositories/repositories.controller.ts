@@ -18,9 +18,7 @@ import { RepositoriesService } from './repositories.service';
 
 @Controller('repositories')
 export class RepositoriesController {
-  constructor(
-    private readonly repositoriesService: RepositoriesService,
-  ) {}
+  constructor(private readonly repositoriesService: RepositoriesService) {}
 
   @Get()
   getRepositories() {
@@ -50,10 +48,7 @@ export class RepositoriesController {
     @Param('slug') slug: string,
     @Body() updateRepositoryDto: UpdateRepositoryDto,
   ) {
-    return this.repositoriesService.updateRepository(
-      slug,
-      updateRepositoryDto,
-    );
+    return this.repositoriesService.updateRepository(slug, updateRepositoryDto);
   }
 
   @Get(':slug/branches')
@@ -62,10 +57,7 @@ export class RepositoriesController {
   }
 
   @Get(':slug/commits')
-  getCommits(
-    @Param('slug') slug: string,
-    @Query('ref') ref?: string,
-  ) {
+  getCommits(@Param('slug') slug: string, @Query('ref') ref?: string) {
     return this.repositoriesService.getCommits(slug, ref);
   }
 
@@ -75,11 +67,7 @@ export class RepositoriesController {
     @Query('ref') ref?: string,
     @Query('path') repositoryFilePath?: string,
   ) {
-    return this.repositoriesService.getTree(
-      slug,
-      ref,
-      repositoryFilePath,
-    );
+    return this.repositoriesService.getTree(slug, ref, repositoryFilePath);
   }
 
   @Get(':slug/blob')
@@ -88,10 +76,16 @@ export class RepositoriesController {
     @Query('path') repositoryFilePath: string,
     @Query('ref') ref?: string,
   ) {
-    return this.repositoriesService.getBlob(
-      slug,
-      ref,
-      repositoryFilePath,
-    );
+    return this.repositoriesService.getBlob(slug, ref, repositoryFilePath);
+  }
+
+  @Get(':slug/commits/:hash')
+  getCommit(@Param('slug') slug: string, @Param('hash') hash: string) {
+    return this.repositoriesService.getCommit(slug, hash);
+  }
+
+  @Get(':slug/commits/:hash/diff')
+  getCommitDiff(@Param('slug') slug: string, @Param('hash') hash: string) {
+    return this.repositoriesService.getCommitDiff(slug, hash);
   }
 }

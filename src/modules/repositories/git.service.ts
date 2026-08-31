@@ -34,6 +34,23 @@ export interface GitTreeEntry {
   name: string;
 }
 
+
+export interface GitCommitDetails extends GitCommit {
+  committerName: string;
+  committerEmail: string;
+  committedAt: string;
+  parentHashes: string[];
+}
+
+export interface GitDiffFile {
+  oldPath: string | null;
+  newPath: string | null;
+  status: string;
+  additions: number;
+  deletions: number;
+  patch: string;
+}
+
 @Injectable()
 export class GitService {
   private readonly repositoryRoot =
@@ -121,6 +138,82 @@ export class GitService {
       throw error;
     }
   }
+
+
+  async getCommit(repositoryPath: string, hash: string) {
+  this.assertSafeCommitHash(hash);
+
+  try {
+    const { stdout } = await this.runRepositoryGit(repositoryPath, [
+      'show',
+      '-s',
+      '--format=%H%x1f%h%x1f%an%x1f%ae%x1f%aI%x1f%cn%x1f%ce%x1f%cI%x1f%s%x1f%P',
+      hash,
+    ]);
+
+    const [
+      fullHash,
+      shortHash,
+      authorName,
+      authorEmail,
+      authoredAt,
+      committerName,
+      committerEmail,
+      committedAt,
+      subject,
+      parents,
+    ] = stdout.trim().split('\x1f');
+
+    if (!fullHash) {
+      throw new NotFoundException('Commit not found');
+    }
+
+    return {
+      hash: fullHash,
+      shortHash,
+      authorName,
+      authorEmail,
+      authoredAt,
+      subject,
+      committerName,
+      committerEmail,
+      committedAt,
+      parentHashes: parents ? parents.split(' ') : [],
+    };
+  } catch (error) {
+    if (this.isCommitNotFoundError(error)) {
+      throw new NotFoundException('Commit not found');
+    }
+
+    throw error;
+  }
+}
+
+async getCommitDiff(repositoryPath: string, hash: string) {
+  this.assertSafeCommitHash(hash);
+
+  try {
+    const { stdout } = await this.runRepositoryGit(repositoryPath, [
+      'show',
+      '--format=',
+      '--find-renames',
+      '--find-copies',
+      '--unified=3',
+      hash,
+    ]);
+
+    return {
+      hash,
+      diff: stdout,
+    };
+  } catch (error) {
+    if (this.isCommitNotFoundError(error)) {
+      throw new NotFoundException('Commit not found');
+    }
+
+    throw error;
+  }
+}
 
   async listTree(
     repositoryPath: string,
@@ -288,4 +381,27 @@ export class GitService {
       stderr.includes('does not exist in')
     );
   }
+
+  private assertSafeCommitHash(hash: string) {
+  if (
+    !/^[a-f0-9]{7,64}$/i.test(hash) ||
+    hash.startsWith('-')
+  ) {
+    throw new BadRequestException('Invalid commit hash');
+  }
+}
+
+private isCommitNotFoundError(error: unknown) {
+  const stderr = (error as GitCommandError).stderr ?? '';
+
+  return (
+    stderr.includes('unknown revision') ||
+    stderr.includes('bad object') ||
+    stderr.includes('ambiguous argument') ||
+    stderr.includes('does not exist')
+  );
+}
+
+
+
 }
