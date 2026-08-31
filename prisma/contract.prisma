@@ -38,14 +38,19 @@ enum UserRole {
   USER
 }
 
+enum RepositoryVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 model User {
   id            Int              @id @default(autoincrement())
   username      String           @unique
   email         String           @unique
   displayName   String
   avatarUrl     String?
-  role        UserRole  @default(USER)
-  passwordHash String?
+  role          UserRole         @default(USER)
+  passwordHash  String?
   createdAt     DateTime
   updatedAt     DateTime
 
@@ -54,6 +59,21 @@ model User {
   comments      TaskComment[]
   activities    TaskActivity[]
   subscriptions TaskSubscriber[]
+  repositories  Repository[]
+}
+
+model Repository {
+  id          Int                  @id @default(autoincrement())
+  name        String
+  slug        String               @unique
+  description String?
+  localPath   String
+  visibility  RepositoryVisibility @default(PRIVATE)
+  createdById Int
+  createdAt   DateTime
+  updatedAt   DateTime
+
+  createdBy   User                 @relation(fields: [createdById], references: [id])
 }
 
 model Task {
@@ -73,10 +93,10 @@ model Task {
   createdAt    DateTime
   updatedAt    DateTime
 
-  createdBy    User             @relation("TaskAuthor", fields:[createdById], references:[id])
-  assignedTo   User?            @relation("TaskAssignee", fields:[assignedToId], references:[id])
+  createdBy    User             @relation("TaskAuthor", fields: [createdById], references: [id])
+  assignedTo   User?            @relation("TaskAssignee", fields: [assignedToId], references: [id])
 
-  parentTask   Task?            @relation("TaskHierarchy", fields:[parentTaskId], references:[id])
+  parentTask   Task?            @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
   subtasks     Task[]           @relation("TaskHierarchy")
 
   comments     TaskComment[]
@@ -93,8 +113,8 @@ model TaskComment {
   createdAt DateTime
   updatedAt DateTime
 
-  task      Task     @relation(fields:[taskId], references:[id])
-  user      User     @relation(fields:[userId], references:[id])
+  task      Task     @relation(fields: [taskId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model TaskActivity {
@@ -107,8 +127,8 @@ model TaskActivity {
   comment   String?
   createdAt DateTime
 
-  task      Task             @relation(fields:[taskId], references:[id])
-  user      User             @relation(fields:[userId], references:[id])
+  task      Task             @relation(fields: [taskId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
 }
 
 model TaskSubscriber {
@@ -116,8 +136,8 @@ model TaskSubscriber {
   userId    Int
   createdAt DateTime
 
-  task      Task     @relation(fields:[taskId], references:[id])
-  user      User     @relation(fields:[userId], references:[id])
+  task      Task     @relation(fields: [taskId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@id([taskId, userId])
 }
@@ -136,8 +156,8 @@ model TaskTag {
   taskId Int
   tagId  Int
 
-  task   Task @relation(fields:[taskId], references:[id])
-  tag    Tag  @relation(fields:[tagId], references:[id])
+  task   Task @relation(fields: [taskId], references: [id])
+  tag    Tag  @relation(fields: [tagId], references: [id])
 
   @@id([taskId, tagId])
 }

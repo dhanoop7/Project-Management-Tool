@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.repository",
+    "label": "Create table \"repository\"",
+    "summary": "Creates table \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"repository\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"repository\"",
+        "sql": "CREATE TABLE \"public\".\"repository\" (\n  \"createdAt\" timestamptz NOT NULL,\n  \"createdById\" int4 NOT NULL,\n  \"description\" text,\n  \"id\" SERIAL NOT NULL,\n  \"localPath\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"slug\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"visibility\" text DEFAULT 'PRIVATE' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"repository_visibility_check_60a8f38d\" CHECK (\"visibility\" IN ('PUBLIC', 'PRIVATE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"repository\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.repository.repository_slug_key",
+    "label": "Add unique constraint on \"repository\" (slug)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "repository_slug_key",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"repository_slug_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_slug_key",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"repository_slug_key\"",
+        "sql": "ALTER TABLE \"public\".\"repository\" ADD CONSTRAINT \"repository_slug_key\" UNIQUE (\"slug\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"repository_slug_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_slug_key",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.repository.repository_createdById_idx_8bf640ed",
+    "label": "Create index \"repository_createdById_idx_8bf640ed\" on \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "repository_createdById_idx_8bf640ed",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"repository_createdById_idx_8bf640ed\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository_createdById_idx_8bf640ed\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"repository_createdById_idx_8bf640ed\"",
+        "sql": "CREATE INDEX \"repository_createdById_idx_8bf640ed\" ON \"public\".\"repository\" (\"createdById\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"repository_createdById_idx_8bf640ed\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository_createdById_idx_8bf640ed\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.repository.repository_createdById_fkey",
+    "label": "Add foreign key \"repository_createdById_fkey\" on \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "repository_createdById_fkey",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"repository_createdById_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_createdById_fkey",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"repository_createdById_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"repository\"\nADD CONSTRAINT \"repository_createdById_fkey\"\nFOREIGN KEY (\"createdById\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"repository_createdById_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_createdById_fkey",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ]
+  }
+]
