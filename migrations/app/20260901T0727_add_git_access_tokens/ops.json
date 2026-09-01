@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.gitAccessToken",
+    "label": "Create table \"gitAccessToken\"",
+    "summary": "Creates table \"gitAccessToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "gitAccessToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"gitAccessToken\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gitAccessToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"gitAccessToken\"",
+        "sql": "CREATE TABLE \"public\".\"gitAccessToken\" (\n  \"createdAt\" timestamptz NOT NULL,\n  \"expiresAt\" timestamptz,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  \"revokedAt\" timestamptz,\n  \"tokenHash\" text NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"gitAccessToken\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gitAccessToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.gitAccessToken.gitAccessToken_tokenHash_key",
+    "label": "Add unique constraint on \"gitAccessToken\" (tokenHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "gitAccessToken_tokenHash_key",
+        "table": "gitAccessToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"gitAccessToken_tokenHash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gitAccessToken_tokenHash_key",
+          "public",
+          "\"public\".\"gitAccessToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"gitAccessToken_tokenHash_key\"",
+        "sql": "ALTER TABLE \"public\".\"gitAccessToken\" ADD CONSTRAINT \"gitAccessToken_tokenHash_key\" UNIQUE (\"tokenHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"gitAccessToken_tokenHash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gitAccessToken_tokenHash_key",
+          "public",
+          "\"public\".\"gitAccessToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.gitAccessToken.gitAccessToken_userId_idx_a489d58a",
+    "label": "Create index \"gitAccessToken_userId_idx_a489d58a\" on \"gitAccessToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "gitAccessToken_userId_idx_a489d58a",
+        "table": "gitAccessToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"gitAccessToken_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gitAccessToken_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"gitAccessToken_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"gitAccessToken_userId_idx_a489d58a\" ON \"public\".\"gitAccessToken\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"gitAccessToken_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gitAccessToken_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.gitAccessToken.gitAccessToken_userId_fkey",
+    "label": "Add foreign key \"gitAccessToken_userId_fkey\" on \"gitAccessToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "gitAccessToken_userId_fkey",
+        "table": "gitAccessToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"gitAccessToken_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gitAccessToken_userId_fkey",
+          "public",
+          "\"public\".\"gitAccessToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"gitAccessToken_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"gitAccessToken\"\nADD CONSTRAINT \"gitAccessToken_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"gitAccessToken_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gitAccessToken_userId_fkey",
+          "public",
+          "\"public\".\"gitAccessToken\""
+        ]
+      }
+    ]
+  }
+]

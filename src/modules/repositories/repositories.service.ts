@@ -132,6 +132,12 @@ export class RepositoriesService {
     );
   }
 
+  async enableHttpPush(slug: string) {
+    const repository = await this.getRepository(slug);
+
+    await this.gitService.enableHttpPush(repository.localPath);
+  }
+
   async getCommit(slug: string, hash: string) {
     const repository = await this.getRepository(slug);
 

@@ -82,6 +82,16 @@ export class GitService {
       '--bare',
       repositoryPath,
     ]);
+
+    await this.enableHttpPush(repositoryPath);
+  }
+
+  async enableHttpPush(repositoryPath: string) {
+    await this.runRepositoryGit(repositoryPath, [
+      'config',
+      'http.receivepack',
+      'true',
+    ]);
   }
 
   async listBranches(repositoryPath: string) {

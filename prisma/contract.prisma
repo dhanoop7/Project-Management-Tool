@@ -60,6 +60,7 @@ model User {
   activities    TaskActivity[]
   subscriptions TaskSubscriber[]
   repositories  Repository[]
+  gitAccessTokens GitAccessToken[]
 }
 
 model Repository {
@@ -74,6 +75,19 @@ model Repository {
   updatedAt   DateTime
 
   createdBy   User                 @relation(fields: [createdById], references: [id])
+}
+
+
+model GitAccessToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  tokenHash String   @unique
+  createdAt DateTime
+  expiresAt DateTime?
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Task {
