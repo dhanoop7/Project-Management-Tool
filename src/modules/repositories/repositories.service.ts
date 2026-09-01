@@ -1,8 +1,11 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
+import type { UserRole } from '../auth/types/authenticated-user';
 import { Temporal } from 'temporal-polyfill';
 
 import { PrismaService } from '../../prisma/prisma.service';
@@ -77,8 +80,10 @@ export class RepositoriesService {
   async updateRepository(
     slug: string,
     updateRepositoryDto: UpdateRepositoryDto,
+    userId: number,
+    role: UserRole,
   ) {
-    await this.getRepository(slug);
+    await this.assertCanManageRepository(slug, userId, role);
 
     return this.prisma.client.orm.public.Repository.where({
       slug,
@@ -148,5 +153,94 @@ export class RepositoriesService {
     const repository = await this.getRepository(slug);
 
     return this.gitService.getCommitDiff(repository.localPath, hash);
+  }
+
+  async assertCanReadRepository(slug: string, userId: number, role: UserRole) {
+    const repository = await this.getRepository(slug);
+
+    // Public repositories can be read by anyone.
+    if (repository.visibility === 'PUBLIC') {
+      return repository;
+    }
+
+    // Application ADMIN has full access.
+    if (role === 'ADMIN') {
+      return repository;
+    }
+
+    // Repository owner has full access.
+    if (repository.createdById === userId) {
+      return repository;
+    }
+
+    const member = await this.prisma.client.orm.public.RepositoryMember.where({
+      repositoryId: repository.id,
+      userId,
+    }).first();
+
+    if (!member) {
+      throw new ForbiddenException(
+        'You do not have permission to access this repository',
+      );
+    }
+
+    return repository;
+  }
+
+  async assertCanWriteRepository(slug: string, userId: number, role: UserRole) {
+    const repository = await this.getRepository(slug);
+
+    // Application ADMIN has full access.
+    if (role === 'ADMIN') {
+      return repository;
+    }
+
+    // Repository owner has full access.
+    if (repository.createdById === userId) {
+      return repository;
+    }
+
+    const member = await this.prisma.client.orm.public.RepositoryMember.where({
+      repositoryId: repository.id,
+      userId,
+    }).first();
+
+    if (!member || (member.role !== 'WRITE' && member.role !== 'ADMIN')) {
+      throw new ForbiddenException(
+        'You do not have permission to write to this repository',
+      );
+    }
+
+    return repository;
+  }
+
+  async assertCanManageRepository(
+    slug: string,
+    userId: number,
+    role: UserRole,
+  ) {
+    const repository = await this.getRepository(slug);
+
+    if (role === 'ADMIN') {
+      return repository;
+    }
+
+    if (repository.createdById !== userId) {
+      const member =
+        await this.prisma.client.orm.public.RepositoryMember.where({
+          repositoryId: repository.id,
+          userId,
+        }).first();
+
+      if (member?.role === 'ADMIN') {
+        return repository;
+      }
+
+      throw new ForbiddenException(
+        'You do not have permission to manage this repository',
+      );
+    }
+
+    return repository;
   }
 }

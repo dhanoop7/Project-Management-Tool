@@ -1,0 +1,203 @@
+[
+  {
+    "id": "table.repositoryMember",
+    "label": "Create table \"repositoryMember\"",
+    "summary": "Creates table \"repositoryMember\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "repositoryMember"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"repositoryMember\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryMember\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"repositoryMember\"",
+        "sql": "CREATE TABLE \"public\".\"repositoryMember\" (\n  \"createdAt\" timestamptz NOT NULL,\n  \"repositoryId\" int4 NOT NULL,\n  \"role\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"repositoryId\", \"userId\"),\n  CONSTRAINT \"repositoryMember_role_check_0f360d06\" CHECK (\"role\" IN ('READ', 'WRITE', 'ADMIN'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"repositoryMember\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryMember\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.repositoryMember.repositoryMember_repositoryId_idx_dce7a8ba",
+    "label": "Create index \"repositoryMember_repositoryId_idx_dce7a8ba\" on \"repositoryMember\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "repositoryMember_repositoryId_idx_dce7a8ba",
+        "table": "repositoryMember"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"repositoryMember_repositoryId_idx_dce7a8ba\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryMember_repositoryId_idx_dce7a8ba\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"repositoryMember_repositoryId_idx_dce7a8ba\"",
+        "sql": "CREATE INDEX \"repositoryMember_repositoryId_idx_dce7a8ba\" ON \"public\".\"repositoryMember\" (\"repositoryId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"repositoryMember_repositoryId_idx_dce7a8ba\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryMember_repositoryId_idx_dce7a8ba\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.repositoryMember.repositoryMember_userId_idx_a489d58a",
+    "label": "Create index \"repositoryMember_userId_idx_a489d58a\" on \"repositoryMember\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "repositoryMember_userId_idx_a489d58a",
+        "table": "repositoryMember"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"repositoryMember_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryMember_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"repositoryMember_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"repositoryMember_userId_idx_a489d58a\" ON \"public\".\"repositoryMember\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"repositoryMember_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryMember_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.repositoryMember.repositoryMember_repositoryId_fkey",
+    "label": "Add foreign key \"repositoryMember_repositoryId_fkey\" on \"repositoryMember\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "repositoryMember_repositoryId_fkey",
+        "table": "repositoryMember"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"repositoryMember_repositoryId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryMember_repositoryId_fkey",
+          "public",
+          "\"public\".\"repositoryMember\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"repositoryMember_repositoryId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"repositoryMember\"\nADD CONSTRAINT \"repositoryMember_repositoryId_fkey\"\nFOREIGN KEY (\"repositoryId\")\nREFERENCES \"public\".\"repository\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"repositoryMember_repositoryId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryMember_repositoryId_fkey",
+          "public",
+          "\"public\".\"repositoryMember\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.repositoryMember.repositoryMember_userId_fkey",
+    "label": "Add foreign key \"repositoryMember_userId_fkey\" on \"repositoryMember\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "repositoryMember_userId_fkey",
+        "table": "repositoryMember"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"repositoryMember_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryMember_userId_fkey",
+          "public",
+          "\"public\".\"repositoryMember\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"repositoryMember_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"repositoryMember\"\nADD CONSTRAINT \"repositoryMember_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"repositoryMember_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryMember_userId_fkey",
+          "public",
+          "\"public\".\"repositoryMember\""
+        ]
+      }
+    ]
+  }
+]

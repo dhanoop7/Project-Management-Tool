@@ -43,24 +43,31 @@ enum RepositoryVisibility {
   PRIVATE
 }
 
-model User {
-  id            Int              @id @default(autoincrement())
-  username      String           @unique
-  email         String           @unique
-  displayName   String
-  avatarUrl     String?
-  role          UserRole         @default(USER)
-  passwordHash  String?
-  createdAt     DateTime
-  updatedAt     DateTime
+enum RepositoryMemberRole {
+  READ
+  WRITE
+  ADMIN
+}
 
-  createdTasks  Task[]           @relation("TaskAuthor")
-  assignedTasks Task[]           @relation("TaskAssignee")
-  comments      TaskComment[]
-  activities    TaskActivity[]
-  subscriptions TaskSubscriber[]
-  repositories  Repository[]
-  gitAccessTokens GitAccessToken[]
+model User {
+  id                    Int                @id @default(autoincrement())
+  username              String             @unique
+  email                 String             @unique
+  displayName           String
+  avatarUrl             String?
+  role                  UserRole           @default(USER)
+  passwordHash          String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  createdTasks          Task[]             @relation("TaskAuthor")
+  assignedTasks         Task[]             @relation("TaskAssignee")
+  comments              TaskComment[]
+  activities            TaskActivity[]
+  subscriptions         TaskSubscriber[]
+  repositories          Repository[]
+  gitAccessTokens       GitAccessToken[]
+  repositoryMemberships RepositoryMember[]
 }
 
 model Repository {
@@ -75,8 +82,21 @@ model Repository {
   updatedAt   DateTime
 
   createdBy   User                 @relation(fields: [createdById], references: [id])
+  members     RepositoryMember[]
 }
 
+model RepositoryMember {
+  repositoryId Int
+  userId       Int
+  role         RepositoryMemberRole
+  createdAt    DateTime
+  updatedAt    DateTime
+
+  repository   Repository           @relation(fields: [repositoryId], references: [id])
+  user         User                 @relation(fields: [userId], references: [id])
+
+  @@id([repositoryId, userId])
+}
 
 model GitAccessToken {
   id        Int      @id @default(autoincrement())

@@ -1,16 +1,25 @@
 import {
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Post,
   Req,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { spawn } from 'node:child_process';
 
 import { RepositoriesService } from './repositories.service';
 import { GitAuthenticationService } from './git-authentication.service';
+
+interface GitAuthenticatedUser {
+  userId: number;
+  username: string;
+  role: 'ADMIN' | 'USER';
+  tokenId: number;
+}
 
 @Controller('git')
 export class GitTransportController {
@@ -33,15 +42,27 @@ export class GitTransportController {
     }
 
     const repository = await this.repositoriesService.getRepository(slug);
+    const serviceName = String(service);
 
-    if (
-      repository.visibility === 'PRIVATE' &&
-      !(await this.authenticateGitRequest(req, res))
-    ) {
+    const auth = await this.getGitAuthentication(req, res);
+
+    if (repository.visibility === 'PRIVATE' && auth === null) {
+      this.sendGitUnauthorized(res);
       return;
     }
 
-    const serviceName = String(service);
+    if (auth) {
+      const hasAccess = await this.authorizeGitService(
+        slug,
+        serviceName,
+        auth,
+        res,
+      );
+
+      if (!hasAccess) {
+        return;
+      }
+    }
 
     const gitCommand =
       serviceName === 'git-upload-pack' ? 'upload-pack' : 'receive-pack';
@@ -120,11 +141,19 @@ export class GitTransportController {
   ) {
     const repository = await this.repositoriesService.getRepository(slug);
 
-    if (
-      repository.visibility === 'PRIVATE' &&
-      !(await this.authenticateGitRequest(req, res))
-    ) {
+    const auth = await this.getGitAuthentication(req, res);
+
+    if (repository.visibility === 'PRIVATE' && auth === null) {
+      this.sendGitUnauthorized(res);
       return;
+    }
+
+    if (auth) {
+      const hasAccess = await this.authorizeGitRead(slug, auth, res);
+
+      if (!hasAccess) {
+        return;
+      }
     }
 
     res.status(200);
@@ -177,7 +206,16 @@ export class GitTransportController {
   ) {
     const repository = await this.repositoriesService.getRepository(slug);
 
-    if (!(await this.authenticateGitRequest(req, res))) {
+    const auth = await this.getGitAuthentication(req, res);
+
+    if (auth === null) {
+      this.sendGitUnauthorized(res);
+      return;
+    }
+
+    const hasAccess = await this.authorizeGitWrite(slug, auth, res);
+
+    if (!hasAccess) {
       return;
     }
 
@@ -225,15 +263,11 @@ export class GitTransportController {
     });
   }
 
-  private async authenticateGitRequest(
-    req: Request,
-    res: Response,
-  ) {
+  private async authenticateGitRequest(req: Request) {
     const authorization = req.headers.authorization;
 
     if (!authorization?.startsWith('Basic ')) {
-      this.sendGitUnauthorized(res);
-      return false;
+      return null;
     }
 
     const encodedCredentials = authorization.slice('Basic '.length);
@@ -245,41 +279,115 @@ export class GitTransportController {
         'utf8',
       );
     } catch {
-      this.sendGitUnauthorized(res);
-      return false;
+      throw new UnauthorizedException('Invalid Git credentials');
     }
 
     const separatorIndex = decodedCredentials.indexOf(':');
 
     if (separatorIndex === -1) {
-      this.sendGitUnauthorized(res);
-      return false;
+      throw new UnauthorizedException('Invalid Git credentials');
     }
 
     const username = decodedCredentials.slice(0, separatorIndex);
     const token = decodedCredentials.slice(separatorIndex + 1);
 
     if (!username || !token) {
-      this.sendGitUnauthorized(res);
-      return false;
+      throw new UnauthorizedException('Invalid Git credentials');
     }
 
+    return this.gitAuthenticationService.authenticate(username, token);
+  }
+
+  private async getGitAuthentication(
+    req: Request,
+    res: Response,
+  ) {
     try {
-      await this.gitAuthenticationService.authenticate(username, token);
-      return true;
-    } catch {
-      this.sendGitUnauthorized(res);
-      return false;
+      return await this.authenticateGitRequest(req);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        this.sendGitUnauthorized(res);
+        return null;
+      }
+
+      throw error;
     }
   }
 
+  private async authorizeGitService(
+    slug: string,
+    serviceName: string,
+    auth: GitAuthenticatedUser,
+    res: Response,
+  ) {
+    if (serviceName === 'git-receive-pack') {
+      return this.authorizeGitWrite(slug, auth, res);
+    }
+
+    return this.authorizeGitRead(slug, auth, res);
+  }
+
+  private async authorizeGitRead(
+    slug: string,
+    auth: GitAuthenticatedUser,
+    res: Response,
+  ) {
+    try {
+      await this.repositoriesService.assertCanReadRepository(
+        slug,
+        auth.userId,
+        auth.role,
+      );
+
+      return true;
+    } catch (error) {
+      return this.handleAuthorizationError(error, res);
+    }
+  }
+
+  private async authorizeGitWrite(
+    slug: string,
+    auth: GitAuthenticatedUser,
+    res: Response,
+  ) {
+    try {
+      await this.repositoriesService.assertCanWriteRepository(
+        slug,
+        auth.userId,
+        auth.role,
+      );
+
+      return true;
+    } catch (error) {
+      return this.handleAuthorizationError(error, res);
+    }
+  }
+
+  private handleAuthorizationError(
+    error: unknown,
+    res: Response,
+  ) {
+    if (error instanceof ForbiddenException) {
+      this.sendGitForbidden(res);
+      return false;
+    }
+
+    if (error instanceof UnauthorizedException) {
+      this.sendGitUnauthorized(res);
+      return false;
+    }
+
+    throw error;
+  }
+
   private sendGitUnauthorized(res: Response) {
-    res.setHeader(
-      'WWW-Authenticate',
-      'Basic realm="PhabNew Git"',
-    );
+    res.setHeader('WWW-Authenticate', 'Basic realm="PhabNew Git"');
 
     res.status(401).send('Git authentication required');
+  }
+
+  private sendGitForbidden(res: Response) {
+    res.status(403).send('Git repository permission denied');
   }
 
   private pktLine(data: Buffer) {

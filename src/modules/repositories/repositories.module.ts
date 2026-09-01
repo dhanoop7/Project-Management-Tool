@@ -10,6 +10,8 @@ import { GitTransportController } from './git-transport.controller';
 import { RepositoriesController } from './repositories.controller';
 import { RepositoriesService } from './repositories.service';
 import { GitAuthenticationService } from './git-authentication.service';
+import { RepositoryMembersController } from './repository-members.controller';
+import { RepositoryMembersService } from './repository-members.service';
 
 @Module({
   imports: [AuthModule, PrismaModule],
@@ -17,12 +19,14 @@ import { GitAuthenticationService } from './git-authentication.service';
     RepositoriesController,
     GitTransportController,
     GitAccessTokenController,
+    RepositoryMembersController,
   ],
   providers: [
     GitService,
     RepositoriesService,
     GitAccessTokenService,
     GitAuthenticationService,
+    RepositoryMembersService,
   ],
 })
 export class RepositoriesModule {}

@@ -12,6 +12,10 @@
       "model": "Repository",
       "namespace": "public"
     },
+    "repositoryMember": {
+      "model": "RepositoryMember",
+      "namespace": "public"
+    },
     "tag": {
       "model": "Tag",
       "namespace": "public"
@@ -45,6 +49,23 @@
     "namespaces": {
       "public": {
         "enum": {
+          "RepositoryMemberRole": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "READ",
+                "value": "READ"
+              },
+              {
+                "name": "WRITE",
+                "value": "WRITE"
+              },
+              {
+                "name": "ADMIN",
+                "value": "ADMIN"
+              }
+            ]
+          },
           "RepositoryVisibility": {
             "codecId": "pg/text@1",
             "members": [
@@ -369,6 +390,21 @@
                   "model": "User",
                   "namespace": "public"
                 }
+              },
+              "members": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "repositoryId"
+                  ]
+                },
+                "to": {
+                  "model": "RepositoryMember",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -403,6 +439,104 @@
               },
               "namespaceId": "public",
               "table": "repository"
+            }
+          },
+          "RepositoryMember": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "repositoryId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "RepositoryMemberRole",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "repository": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "repositoryId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Repository",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "repositoryId": {
+                  "column": "repositoryId"
+                },
+                "role": {
+                  "column": "role"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "repositoryMember"
             }
           },
           "Tag": {
@@ -1279,6 +1413,21 @@
                   "namespace": "public"
                 }
               },
+              "repositoryMemberships": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "RepositoryMember",
+                  "namespace": "public"
+                }
+              },
               "subscriptions": {
                 "cardinality": "1:N",
                 "on": {
@@ -1530,6 +1679,107 @@
                   ]
                 }
               ]
+            },
+            "repositoryMember": {
+              "checks": [
+                {
+                  "expression": "\"role\" IN ('READ', 'WRITE', 'ADMIN')",
+                  "name": "repositoryMember_role_check_0f360d06",
+                  "prefix": "repositoryMember_role_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "repositoryId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "RepositoryMemberRole",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "repositoryId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repositoryMember"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repository"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repositoryMember"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "repositoryId"
+                  ],
+                  "name": "repositoryMember_repositoryId_idx_dce7a8ba",
+                  "prefix": "repositoryMember_repositoryId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "repositoryMember_userId_idx_a489d58a",
+                  "prefix": "repositoryMember_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "repositoryId",
+                  "userId"
+                ]
+              },
+              "uniques": []
             },
             "tag": {
               "columns": {
@@ -2238,6 +2488,14 @@
             }
           },
           "valueSet": {
+            "RepositoryMemberRole": {
+              "kind": "valueSet",
+              "values": [
+                "READ",
+                "WRITE",
+                "ADMIN"
+              ]
+            },
             "RepositoryVisibility": {
               "kind": "valueSet",
               "values": [
@@ -2301,7 +2559,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "2f647eba3c98366610b52b520bd72ec6baf50e8b85e98c37f81e1ac418997779"
+    "storageHash": "bb2b9683ad1b5d9f2e570daec6956a1e2ad05cc2e848a8ad29055bd370bb1ef3"
   },
   "capabilities": {
     "postgres": {

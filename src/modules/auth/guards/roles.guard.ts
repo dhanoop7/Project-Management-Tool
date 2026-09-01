@@ -10,6 +10,8 @@ import {
   ROLES_KEY,
 } from '../decorators/roles.decorator';
 
+import type { UserRole } from '../types/authenticated-user';
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
@@ -20,7 +22,7 @@ export class RolesGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean {
     const requiredRoles =
-      this.reflector.getAllAndOverride<string[]>(
+      this.reflector.getAllAndOverride<UserRole[]>(
         ROLES_KEY,
         [
           context.getHandler(),

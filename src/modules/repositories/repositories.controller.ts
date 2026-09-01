@@ -47,10 +47,15 @@ export class RepositoriesController {
   updateRepository(
     @Param('slug') slug: string,
     @Body() updateRepositoryDto: UpdateRepositoryDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.repositoriesService.updateRepository(slug, updateRepositoryDto);
+    return this.repositoriesService.updateRepository(
+      slug,
+      updateRepositoryDto,
+      req.user.userId,
+      req.user.role,
+    );
   }
-
   @Get(':slug/branches')
   getBranches(@Param('slug') slug: string) {
     return this.repositoriesService.getBranches(slug);
