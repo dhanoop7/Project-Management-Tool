@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -6,6 +7,7 @@ import {
 import { Temporal } from 'temporal-polyfill';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import type { UserRole } from '../auth/types/authenticated-user';
 import { CreateRepositoryMemberDto } from './dto/create-repository-member.dto';
 import { UpdateRepositoryMemberDto } from './dto/update-repository-member.dto';
 import { RepositoriesService } from './repositories.service';
@@ -17,9 +19,17 @@ export class RepositoryMembersService {
     private readonly repositoriesService: RepositoriesService,
   ) {}
 
-  async getMembers(slug: string) {
+  async getMembers(
+    slug: string,
+    userId: number,
+    role: UserRole,
+  ) {
     const repository =
-      await this.repositoriesService.getRepository(slug);
+      await this.repositoriesService.assertCanManageMembers(
+        slug,
+        userId,
+        role,
+      );
 
     return this.prisma.client.orm.public.RepositoryMember
       .where({
@@ -32,10 +42,10 @@ export class RepositoryMembersService {
     slug: string,
     dto: CreateRepositoryMemberDto,
     userId: number,
-    role: 'ADMIN' | 'USER',
+    role: UserRole,
   ) {
     const repository =
-      await this.repositoriesService.assertCanManageRepository(
+      await this.repositoriesService.assertCanManageMembers(
         slug,
         userId,
         role,
@@ -86,10 +96,12 @@ export class RepositoryMembersService {
     targetUserId: number,
     dto: UpdateRepositoryMemberDto,
     userId: number,
-    role: 'ADMIN' | 'USER',
+    role: UserRole,
   ) {
+    this.assertValidUserId(targetUserId);
+
     const repository =
-      await this.repositoriesService.assertCanManageRepository(
+      await this.repositoriesService.assertCanManageMembers(
         slug,
         userId,
         role,
@@ -126,10 +138,12 @@ export class RepositoryMembersService {
     slug: string,
     targetUserId: number,
     userId: number,
-    role: 'ADMIN' | 'USER',
+    role: UserRole,
   ) {
+    this.assertValidUserId(targetUserId);
+
     const repository =
-      await this.repositoriesService.assertCanManageRepository(
+      await this.repositoriesService.assertCanManageMembers(
         slug,
         userId,
         role,
@@ -161,5 +175,11 @@ export class RepositoryMembersService {
     return {
       message: 'Repository member removed successfully',
     };
+  }
+
+  private assertValidUserId(userId: number) {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new BadRequestException('Invalid user ID');
+    }
   }
 }

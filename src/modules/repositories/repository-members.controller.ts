@@ -25,8 +25,15 @@ export class RepositoryMembersController {
   ) {}
 
   @Get()
-  getMembers(@Param('slug') slug: string) {
-    return this.repositoryMembersService.getMembers(slug);
+  getMembers(
+    @Param('slug') slug: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.repositoryMembersService.getMembers(
+      slug,
+      req.user.userId,
+      req.user.role,
+    );
   }
 
   @Post()

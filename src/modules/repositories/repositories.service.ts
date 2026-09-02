@@ -243,4 +243,33 @@ export class RepositoriesService {
 
     return repository;
   }
+
+  async assertCanManageMembers(
+    slug: string,
+    userId: number,
+    role: UserRole,
+  ) {
+    const repository = await this.getRepository(slug);
+
+    if (role === 'ADMIN') {
+      return repository;
+    }
+
+    if (repository.createdById === userId) {
+      return repository;
+    }
+
+    const member = await this.prisma.client.orm.public.RepositoryMember.where({
+      repositoryId: repository.id,
+      userId,
+    }).first();
+
+    if (member?.role === 'ADMIN') {
+      return repository;
+    }
+
+    throw new ForbiddenException(
+      'You do not have permission to manage repository members',
+    );
+  }
 }
