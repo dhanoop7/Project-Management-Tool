@@ -90,6 +90,11 @@ export class AuthService {
     };
   }
 
+  async getUsers() {
+    const users = await this.prisma.client.orm.public.User.all();
+    return users.map((user) => this.toPublicUser(user));
+  }
+
   private toPublicUser(user: NonNullable<AuthUserRow>) {
     const { passwordHash, ...publicUser } = user;
     void passwordHash;

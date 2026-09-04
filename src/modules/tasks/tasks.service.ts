@@ -196,6 +196,31 @@ export class TasksService {
       );
     }
 
+    // Unlink any subtasks referencing this task
+    await this.prisma.client.orm.public.Task.where({
+      parentTaskId: id,
+    }).update({
+      parentTaskId: null,
+    });
+
+    // Cascade delete dependent task records
+    await this.prisma.client.orm.public.TaskActivity.where({
+      taskId: id,
+    }).delete();
+
+    await this.prisma.client.orm.public.TaskComment.where({
+      taskId: id,
+    }).delete();
+
+    await this.prisma.client.orm.public.TaskSubscriber.where({
+      taskId: id,
+    }).delete();
+
+    await this.prisma.client.orm.public.TaskTag.where({
+      taskId: id,
+    }).delete();
+
+    // Delete the task
     await this.prisma.client.orm.public.Task.where({
       id,
     }).delete();

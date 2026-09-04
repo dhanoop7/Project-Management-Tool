@@ -16,17 +16,45 @@ export class CreateTaskDto {
   description?: string;
 
   @IsOptional()
-  @IsEnum(['UNBREAK_NOW', 'NEEDS_TRIAGE', 'HIGH', 'NORMAL', 'LOW', 'WISHLIST'])
+  @IsEnum([
+    'UNBREAK_NOW',
+    'NEEDS_TRIAGE',
+    'HIGH',
+    'NORMAL',
+    'LOW',
+    'WISHLIST',
+  ])
   priority?:
-    'UNBREAK_NOW' | 'NEEDS_TRIAGE' | 'HIGH' | 'NORMAL' | 'LOW' | 'WISHLIST';
+    | 'UNBREAK_NOW'
+    | 'NEEDS_TRIAGE'
+    | 'HIGH'
+    | 'NORMAL'
+    | 'LOW'
+    | 'WISHLIST';
 
   @IsOptional()
-  @IsEnum(['OPEN', 'RESOLVED', 'WONT_FIX', 'INVALID', 'SPITE'])
-  status?: 'OPEN' | 'RESOLVED' | 'WONT_FIX' | 'INVALID' | 'SPITE';
+  @IsEnum([
+    'OPEN',
+    'RESOLVED',
+    'WONT_FIX',
+    'INVALID',
+    'SPITE',
+  ])
+  status?:
+    | 'OPEN'
+    | 'RESOLVED'
+    | 'WONT_FIX'
+    | 'INVALID'
+    | 'SPITE';
 
   @IsOptional()
-  @IsEnum(['ALL_USERS', 'CUSTOM'])
-  visibility?: 'ALL_USERS' | 'CUSTOM';
+  @IsEnum([
+    'ALL_USERS',
+    'CUSTOM',
+  ])
+  visibility?:
+    | 'ALL_USERS'
+    | 'CUSTOM';
 
   @IsOptional()
   @IsInt()
